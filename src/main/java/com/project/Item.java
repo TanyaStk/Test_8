@@ -24,7 +24,7 @@ public class Item {
 
     @Override
     public int hashCode() {
-        return Objects.hash(format, number, name, deliveryDate, category, frequencyOFSearching);
+        return Objects.hash(number, name, deliveryDate, category, frequencyOFSearching);
     }
 
     public Item(String inf) throws Exception {
@@ -41,18 +41,11 @@ public class Item {
 
     @Override
     public String toString() {
-        return "Item{" +
-                "format=" + format +
-                ", number='" + number + '\'' +
-                ", name='" + name + '\'' +
-                ", deliveryDate=" + deliveryDate +
+        return  "name='" + name + '\'' +
+                ", deliveryDate=" + format.format(deliveryDate) +
                 ", category='" + category + '\'' +
                 ", frequencyOFSearching=" + frequencyOFSearching +
                 '}';
-    }
-
-    public SimpleDateFormat getFormat() {
-        return format;
     }
 
     public String getNumber() {
