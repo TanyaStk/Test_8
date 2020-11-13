@@ -4,20 +4,21 @@ import java.io.File;
 import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) {
-        List<User> users = new ArrayList<>();
-        List<Item> shop = new ArrayList<>();
+        Map<String, User> users = new HashMap<>();
+        Map<String, Item> shop = new HashMap<>();
         try (Scanner scannerUsers = new Scanner(new File("users.txt"));
              Scanner scannerShop = new Scanner(new File("shop.txt"))) {
             while (scannerUsers.hasNext()) {
                 User user = new User(scannerUsers.nextLine());
-                users.add(user);
+                users.put(user.getLogin(), user);
             }
             while (scannerShop.hasNext()) {
                 Item item = new Item(scannerShop.nextLine());
-                shop.add(item);
+                shop.put(item.getNumber(), item);
             }
             usersActing(users, shop);
         } catch (Exception ex) {
@@ -25,9 +26,10 @@ public class Main {
         }
     }
 
-    static void usersActing(List<User> users, List<Item> shop) {
+    static void usersActing(Map<String, User> users,
+                            Map<String, Item> shop) {
         String act;
-        System.out.println("Enter category to do:\n" +
+        System.out.println("Choose category to do:\n" +
                 "1 - registration\n" +
                 "2 - login\n" +
                 "3 - view all products\n" +
@@ -36,7 +38,8 @@ public class Main {
                 "6 - average frequency\n" +
                 "7 - exit.");
         try (Scanner scanner = new Scanner(System.in);
-             FileWriter usersFile = new FileWriter(new File("users.txt"), true)) {
+             FileWriter usersFile = new FileWriter(
+                     new File("users.txt"), true)) {
             User enteredUser = new User();
             while (!(act = scanner.next()).equals("7")) {
                 switch (act) {
@@ -44,14 +47,14 @@ public class Main {
                         System.out.println("Enter user information:");
                         String inf = scanner.next();
                         User user = new User(inf);
-                        if (!users.contains(user)) {
-                            users.add(user);
+                        if (!users.containsKey(user.getLogin())) {
+                            users.put(user.getLogin(), user);
                             usersFile.write('\n' + user.toString());
                             System.out.println("New user was added.");
                         } else {
                             System.out.println("User's already exists.");
                         }
-                        System.out.println("Enter category to do:");
+                        System.out.println("Choose category to do:");
                     }
                     case "2" -> {
                         boolean fail = true;
@@ -60,62 +63,96 @@ public class Main {
                             String login = scanner.next();
                             System.out.println("Enter password:");
                             String pass = scanner.next();
-                            int index = findUser(login, users);
-                            if ((index != -1)) {
-                                if (users.get(index).getPassword().equals(pass)) {
-                                    fail = false;
-                                    enteredUser = users.get(index);
-                                    System.out.println("You're logged in!");
+                            if (users.containsKey(login)) {
+                                while (fail) {
+                                    if (users.get(login).getPassword().equals(pass)) {
+                                        fail = false;
+                                        enteredUser = users.get(login);
+                                        System.out.println("You're logged in!");
+                                    } else {
+                                        System.out.println("Wrong password! Try again.");
+                                        pass = scanner.next();
+                                    }
                                 }
                             }
                         }
-                        System.out.println("Enter category to do:");
+                        System.out.println("Choose category to do:");
                     }
                     case "3" -> {
-                        for (Item item : shop) {
-                            System.out.println(item.toString());
+                        if (!enteredUser.getLogin().isEmpty()) {
+                            for (Map.Entry<String, Item> item : shop.entrySet()) {
+                                System.out.println(item.getValue().toString());
+                            }
+                            System.out.println("Choose category to do:");
+                        } else {
+                            System.out.println("You haven't logged in." +
+                                    "Register or log in");
                         }
-                        System.out.println("Enter category to do:");
                     }
                     case "4" -> {
-                        if (enteredUser.getRole().equals("ADMIN")) {
+                        if (enteredUser.getRole().equals(Role.ADMIN)) {
                             System.out.println("Enter item number:");
                             String number = scanner.next();
-                            for (Item item : shop) {
-                                if (item.getNumber().equals(number)) {
-                                    System.out.println(shop.get(shop.indexOf(item)));
+                            for (Map.Entry<String, Item> item : shop.entrySet()) {
+                                if (item.getKey().equals(number)) {
+                                    System.out.println(item.getValue() + "\n");
                                 }
                             }
-                        }
-                        else{
+                        } else {
                             System.out.println("You're not ADMIN");
                         }
-                        System.out.println("Enter category to do:");
+                        System.out.println("Choose category to do:");
                     }
                     case "5" -> {
-                        System.out.println("Enter topN:");
-                        int topN = scanner.nextInt();
-                        shop.sort(Comparator.comparing(Item::getFrequencyOFSearching));
-                        for (int i = 0; i < topN; i++) {
-                            System.out.println(shop.get(i));
+                        if (!enteredUser.getLogin().isEmpty()) {
+                            System.out.println("Enter topN:");
+                            int topN = scanner.nextInt();
+                            Map<String, Item> result = shop.entrySet()
+                                    .stream()
+                                    .sorted(Map.Entry.<String, Item>comparingByValue().reversed())
+                                    .collect(Collectors.toMap(
+                                            Map.Entry::getKey,
+                                            Map.Entry::getValue,
+                                            (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+                            for (Map.Entry<String, Item> item : result.entrySet()) {
+                                System.out.println(item.getValue());
+                                topN--;
+                                if (topN == 0) {
+                                    break;
+                                }
+                            }
+                        } else {
+                            System.out.println("You haven't logged in. " +
+                                    "Register or log in");
                         }
+                        System.out.println("Choose category to do:");
                     }
                     case "6" -> {
-                        System.out.println("Enter category:");
-                        String category = scanner.next();
-                        System.out.println("Enter date of delivery e.g. 01.01.2020:");
-                        Date date = new SimpleDateFormat(
-                                "dd.MM.yyyy").parse(scanner.next());
-                        double averageFrequency = 0;
-                        int amount = 0;
-                        for (Item item : shop) {
-                            if (item.getCategory().equalsIgnoreCase(category) &&
-                                    item.getDeliveryDate().equals(date)) {
-                                averageFrequency += item.getFrequencyOFSearching();
-                                amount++;
+                        if (!enteredUser.getLogin().isEmpty()) {
+                            System.out.println("Enter category:");
+                            String category = scanner.next();
+                            System.out.println("Enter date of delivery e.g. 01.01.2020:");
+                            Date date = new SimpleDateFormat(
+                                    "dd.MM.yyyy").parse(scanner.next());
+                            double averageFrequency = 0;
+                            int amount = 0;
+                            for (Map.Entry<String, Item> item : shop.entrySet()) {
+                                if (item.getValue().getCategory()
+                                        .equalsIgnoreCase(category) &&
+                                        item.getValue()
+                                                .getDeliveryDate().equals(date)) {
+                                    averageFrequency +=
+                                            item.getValue().getFrequencyOFSearching();
+                                    amount++;
+                                }
                             }
+                            System.out.println("Average frequency = "
+                                    + averageFrequency / amount);
+                            System.out.println("Choose category to do:");
+                        } else {
+                            System.out.println("You haven't logged in. " +
+                                    "Register or log in");
                         }
-                        System.out.println("Average frequency = " + averageFrequency / amount);
                     }
                 }
             }
@@ -123,14 +160,4 @@ public class Main {
             System.out.println(ex.getMessage());
         }
     }
-
-    static int findUser(String login, List<User> users) {
-        for (User user : users) {
-            if (user.getLogin().equals(login)) {
-                return users.indexOf(user);
-            }
-        }
-        return -1;
-    }
-
 }
