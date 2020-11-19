@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
 
-public class Item {
+public class Item implements Comparable<Item> {
     private final SimpleDateFormat
             format = new SimpleDateFormat("dd.MM.yyyy");
 
@@ -13,19 +13,6 @@ public class Item {
     private Date deliveryDate;
     private String category;
     private double frequencyOFSearching;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Item item = (Item) o;
-        return Objects.equals(number, item.number);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(format, number, name, deliveryDate, category, frequencyOFSearching);
-    }
 
     public Item(String inf) throws Exception {
         String[] words = inf.split(";");
@@ -40,19 +27,30 @@ public class Item {
     }
 
     @Override
+    public int compareTo(Item item) {
+        return (int) (this.frequencyOFSearching - item.getFrequencyOFSearching());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Item item = (Item) o;
+        return Objects.equals(number, item.number);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(number, name, deliveryDate, category, frequencyOFSearching);
+    }
+
+    @Override
     public String toString() {
-        return "Item{" +
-                "format=" + format +
-                ", number='" + number + '\'' +
-                ", name='" + name + '\'' +
-                ", deliveryDate=" + deliveryDate +
+        return "name='" + name + '\'' +
+                ", deliveryDate=" + format.format(deliveryDate) +
                 ", category='" + category + '\'' +
                 ", frequencyOFSearching=" + frequencyOFSearching +
                 '}';
-    }
-
-    public SimpleDateFormat getFormat() {
-        return format;
     }
 
     public String getNumber() {

@@ -2,34 +2,52 @@ package com.project;
 
 import java.util.Objects;
 
+enum Role {
+    USER,
+    ADMIN
+}
+
 public class User {
     private String userName;
     private String login;
     private String email;
     private String password;
-    private String role;
+    private Role role;
 
     public User(String inf) throws Exception {
         String[] words = inf.split(";");
-        if (words.length < 5) {
+        if (words.length < 4) {
             throw new Exception();
         }
         userName = words[0];
         login = words[1];
         email = words[2];
         password = words[3];
-        role = words[4];
+        if (words.length == 4) {
+            role = Role.USER;
+        } else {
+            role = Role.valueOf(words[4].toUpperCase());
+        }
     }
 
     public User() {
+        userName = "";
+        login = "";
+        email = "";
+        password = "";
     }
+
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return Objects.equals(login, user.login);
+        return Objects.equals(userName, user.userName) &&
+                Objects.equals(login, user.login) &&
+                Objects.equals(email, user.email) &&
+                Objects.equals(password, user.password) &&
+                role == user.role;
     }
 
     @Override
@@ -69,11 +87,11 @@ public class User {
         this.login = login;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 
