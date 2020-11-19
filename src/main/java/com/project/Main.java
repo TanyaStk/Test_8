@@ -3,8 +3,10 @@ package com.project;
 import java.io.File;
 import java.io.FileWriter;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
@@ -107,20 +109,11 @@ public class Main {
                         if (!enteredUser.getLogin().isEmpty()) {
                             System.out.println("Enter topN:");
                             int topN = scanner.nextInt();
-                            Map<String, Item> result = shop.entrySet()
+                            shop.entrySet()
                                     .stream()
                                     .sorted(Map.Entry.<String, Item>comparingByValue().reversed())
-                                    .collect(Collectors.toMap(
-                                            Map.Entry::getKey,
-                                            Map.Entry::getValue,
-                                            (oldValue, newValue) -> oldValue, LinkedHashMap::new));
-                            for (Map.Entry<String, Item> item : result.entrySet()) {
-                                System.out.println(item.getValue());
-                                topN--;
-                                if (topN == 0) {
-                                    break;
-                                }
-                            }
+                                    .limit(topN)
+                                    .forEach(System.out::println);
                         } else {
                             System.out.println("You haven't logged in. " +
                                     "Register or log in");
